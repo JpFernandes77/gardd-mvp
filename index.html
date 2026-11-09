@@ -1,0 +1,248 @@
+!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gardd: plante conteúdo, colha vendas</title>
+<meta name="description" content="Gardd cruza seus posts com as vendas de cada produto e mostra o que gravar na próxima semana.">
+<link rel="icon" href="assets/gardd-icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#14281C;--bg:#E8EFE2;--sprout:#2FB56B;--sun:#F5C518;--soil:#4F6154;--line:#C5D3BE;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--ink:#E8EFE2;--bg:#0F1D15;--soil:#A5B8A8;--line:#27402F;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1.0625rem/1.6 Figtree,system-ui,sans-serif}
+h1,h2,.wm-text{font-family:"Bricolage Grotesque",system-ui,sans-serif}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--sprout);outline-offset:3px}
+header,main,footer{max-width:1080px;margin:0 auto;padding-left:24px;padding-right:24px}
+header{display:flex;align-items:center;justify-content:space-between;padding-top:24px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand img{width:34px;height:34px}
+.brand .wm{height:24px;width:auto;display:block}
+.btn{display:inline-block;background:var(--sun);color:#14281C;font-weight:600;padding:12px 22px;border-radius:999px;text-decoration:none}
+.btn:hover{filter:brightness(.94)}
+.hero{display:grid;grid-template-columns:1fr 1.15fr;gap:40px;align-items:center;padding:48px 0 40px}
+h1{font-size:clamp(2.6rem,6vw,4.4rem);line-height:1;letter-spacing:-.03em;margin:0 0 20px;font-weight:700}
+.lead{font-size:1.2rem;color:var(--soil);max-width:34ch;margin:0 0 28px}
+figure{margin:0}
+figcaption{font-size:.875rem;color:var(--soil);margin-top:8px}
+svg.garden{width:100%;height:auto;display:block}
+svg.garden text{font:600 13px Figtree,system-ui,sans-serif;fill:currentColor}
+.p{transform-box:fill-box;transform-origin:50% 100%;animation:grow 1.1s cubic-bezier(.2,.8,.2,1) both}
+@keyframes grow{from{transform:scaleY(.04)}}
+@media (prefers-reduced-motion:reduce){.p{animation:none}}
+section{padding:40px 0;border-top:1px solid var(--line)}
+h2{font-size:1.75rem;margin:0 0 20px;letter-spacing:-.02em}
+ol{list-style:none;margin:0;padding:0;display:grid;gap:24px;grid-template-columns:repeat(3,1fr)}
+li{border-left:3px solid var(--sprout);padding-left:16px}
+li b{display:block;font-size:1.1rem}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:540px}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line)}
+th{font-weight:600;color:var(--soil)}
+.tag{display:inline-block;font-weight:600;padding:2px 10px;border-radius:999px;background:var(--sun);color:#14281C}
+.tag.k{background:var(--sprout)}
+.tag.o{background:transparent;border:1.5px solid currentColor;color:var(--ink)}
+.note{color:var(--soil);font-size:.9rem;margin-top:12px}
+footer{padding-top:24px;padding-bottom:40px;color:var(--soil);font-size:.9rem}
+@media (max-width:760px){.hero{grid-template-columns:1fr}ol{grid-template-columns:1fr}}
+
+:root{--card:#F4F8F0}
+@media (prefers-color-scheme:dark){:root{--card:#16281D}}
+[hidden]{display:none}
+nav{display:flex;align-items:center;gap:20px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:20px}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+button{font:600 1rem Figtree,system-ui,sans-serif;background:var(--sun);color:#14281C;border:0;border-radius:999px;padding:11px 20px;cursor:pointer}
+button.o{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+button:hover{filter:brightness(.95)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:16px}
+label{display:block;font-weight:600;font-size:.9rem}
+select{width:100%;margin-top:4px;padding:9px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
+input[type=file]{max-width:100%}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.bar{display:inline-block;height:8px;background:var(--sprout);border-radius:4px;vertical-align:middle;margin-left:8px}
+#msg{color:var(--soil);min-height:1.5em;margin:12px 0 0}
+#msg.err{color:#C0392B;font-weight:600}
+.lead2{color:var(--soil);max-width:62ch;margin:0 0 20px}
+@media (max-width:520px){.nl{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="#" aria-label="Gardd"><img src="assets/gardd-icon.svg" alt=""><span class="wm-text" style="font-weight:700;font-size:1.5rem;letter-spacing:-.03em">gardd</span></a>
+  <nav><a class="nl" href="#importar">Testar o importador</a><a class="btn" href="mailto:pedrofcosta769@gmail.com?subject=Quero%20entrar%20na%20lista%20do%20Gardd">Entrar na lista</a></nav>
+</header>
+<main>
+  <div class="hero">
+    <div>
+      <h1>Plante conteúdo. Colha vendas.</h1>
+      <p class="lead">O Gardd cruza seus posts com as vendas de cada produto e mostra o que gravar na próxima semana.</p>
+      <a class="btn" href="mailto:pedrofcosta769@gmail.com?subject=Quero%20entrar%20na%20lista%20do%20Gardd">Entrar na lista de espera</a>
+    </div>
+    <figure>
+      <svg class="garden" viewBox="0 0 440 290" role="img" aria-label="Cinco plantas representando produtos: a altura mostra as vendas e o número abaixo, os posts. O Produto C é o mais alto e tem 1 post; o Produto E é o mais baixo e tem 6 posts.">
+        <defs><path id="lf" d="M0 0C-2-14 12-22 26-18C26-4 12 4 0 0Z" fill="#2FB56B"/></defs>
+        <rect x="10" y="240" width="420" height="6" rx="3" fill="var(--soil)" opacity=".45"/>
+        <g transform="translate(60 240)"><g class="p" style="animation-delay:.1s"><path d="M0 0V-90" stroke="#2FB56B" stroke-width="6" stroke-linecap="round"/><use href="#lf" transform="translate(0 -90)"/><use href="#lf" transform="translate(0 -50) scale(-1 1)"/></g></g>
+        <g transform="translate(140 240)"><g class="p" style="animation-delay:.25s"><path d="M0 0V-130" stroke="#2FB56B" stroke-width="6" stroke-linecap="round"/><use href="#lf" transform="translate(0 -130)"/><use href="#lf" transform="translate(0 -80) scale(-1 1)"/></g></g>
+        <g transform="translate(220 240)"><g class="p" style="animation-delay:.4s"><path d="M0 0V-200" stroke="#2FB56B" stroke-width="6" stroke-linecap="round"/><use href="#lf" transform="translate(0 -200)"/><use href="#lf" transform="translate(0 -140) scale(-1 1)"/><use href="#lf" transform="translate(0 -90)"/></g></g>
+        <g transform="translate(300 240)"><g class="p" style="animation-delay:.55s"><path d="M0 0V-110" stroke="#2FB56B" stroke-width="6" stroke-linecap="round"/><use href="#lf" transform="translate(0 -110)"/><use href="#lf" transform="translate(0 -65) scale(-1 1)"/></g></g>
+        <g transform="translate(380 240)"><g class="p" style="animation-delay:.7s"><path d="M0 0V-50" stroke="#2FB56B" stroke-width="6" stroke-linecap="round"/><use href="#lf" transform="translate(0 -50)"/></g></g>
+        <g text-anchor="middle">
+          <text x="60" y="263">Produto A</text><text x="60" y="281" opacity=".7">3 posts</text>
+          <text x="140" y="263">Produto B</text><text x="140" y="281" opacity=".7">4 posts</text>
+          <text x="220" y="263">Produto C</text><text x="220" y="281" opacity=".7">1 post</text>
+          <text x="300" y="263">Produto D</text><text x="300" y="281" opacity=".7">3 posts</text>
+          <text x="380" y="263">Produto E</text><text x="380" y="281" opacity=".7">6 posts</text>
+        </g>
+        <rect x="165" y="2" width="110" height="24" rx="12" fill="#F5C518"/><text x="220" y="19" text-anchor="middle" style="fill:#14281C">Hora de regar</text>
+        <rect x="330" y="152" width="100" height="24" rx="12" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="380" y="169" text-anchor="middle">Pode podar</text>
+      </svg>
+      <figcaption>Cada planta é um produto: a altura é a venda, o número embaixo são os posts. Dados fictícios.</figcaption>
+    </figure>
+  </div>
+
+  <section>
+    <h2>Como funciona</h2>
+    <ol>
+      <li><b>Importe</b>Suba suas vendas por produto e a lista de posts. Sem dados de clientes.</li>
+      <li><b>Marque</b>A IA sugere de qual produto cada post fala. Você confirma com um clique.</li>
+      <li><b>Colha</b>Veja quais produtos pedem mais conteúdo e quais já estão com sobra.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>O relatório da semana</h2>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Produto</th><th>Posts</th><th>Vendas</th><th>O que fazer</th></tr></thead>
+        <tbody>
+          <tr><td>Produto C</td><td>1</td><td>R$ 4.200</td><td><span class="tag">Regar</span> Grave mais vídeos dele</td></tr>
+          <tr><td>Produto A</td><td>3</td><td>R$ 1.900</td><td><span class="tag k">Manter</span> Conteúdo e venda equilibrados</td></tr>
+          <tr><td>Produto E</td><td>6</td><td>R$ 450</td><td><span class="tag o">Podar</span> Troque por outro produto</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Exemplo com dados fictícios. As sugestões mostram associação entre conteúdo e venda, não prova de causa.</p>
+  </section>
+
+  <section id="importar">
+    <h2>Teste o importador de vendas</h2>
+    <p class="lead2">Suba o CSV de pedidos exportado do Bling ou de outro sistema, ou use os dados de exemplo. O arquivo é lido no seu navegador e não é enviado a nenhum servidor. Não inclua dados de clientes.</p>
+    <div class="box">
+      <div class="row">
+        <input type="file" id="file" accept=".csv,.txt" aria-label="Arquivo CSV de vendas">
+        <button class="o" id="sample" type="button">Usar dados de exemplo</button>
+      </div>
+      <p id="msg" role="status"></p>
+    </div>
+    <div class="box" id="map" hidden>
+      <h2>Confira as colunas</h2>
+      <div class="grid">
+        <label>Data do pedido<select id="c-date"></select></label>
+        <label>Produto<select id="c-product"></select></label>
+        <label>Quantidade<select id="c-qty"></select></label>
+        <label>Valor<select id="c-value"></select></label>
+        <label>O valor é<select id="c-kind"><option value="total">Total da linha</option><option value="unit">Preço unitário</option></select></label>
+      </div>
+      <button id="go" type="button">Importar</button>
+    </div>
+    <div class="box" id="out" hidden>
+      <h2>Vendas por produto</h2>
+      <p id="sum" class="lead2"></p>
+      <div class="tw"><table id="t-prod"></table></div>
+      <h2>Vendas por semana</h2>
+      <div class="tw"><table id="t-week"></table></div>
+      <button id="dl" class="o" type="button">Baixar resultado (JSON)</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Em construção</h2>
+    <p>O Gardd nasce no Hack Brasil 2026. O importador de vendas acima já funciona. Em seguida vêm a marcação dos posts por produto e as recomendações. WhatsApp e estoque entram depois.</p>
+    <p><a class="btn" href="mailto:pedrofcosta769@gmail.com?subject=Quero%20entrar%20na%20lista%20do%20Gardd">Entrar na lista de espera</a></p>
+  </section>
+</main>
+<footer>Gardd, feito no Brasil. Projeto do Hack Brasil 2026.</footer>
+<script src="gardd-core.js"></script>
+<script>
+
+(function () {
+  var C = window.GarddCore, $ = function (id) { return document.getElementById(id); };
+  if (!C) { $('msg').textContent = 'Não encontrei o arquivo gardd-core.js. Coloque-o na mesma pasta do index.html.'; $('msg').className = 'err'; return; }
+  var data = null, result = null;
+  var brl = function (n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); };
+  var num = function (n) { return n.toLocaleString('pt-BR'); };
+  function say(t, err) { $('msg').textContent = t; $('msg').className = err ? 'err' : ''; }
+
+  function load(text) {
+    $('out').hidden = true;
+    var rows = C.parseCSV(text, C.detectDelimiter(text));
+    if (rows.length < 2 || rows[0].length < 2) { $('map').hidden = true; say('Não consegui separar as colunas. Confira se o arquivo é um CSV com cabeçalho.', true); return; }
+    var headers = rows.shift(), g = C.guessColumns(headers);
+    data = { headers: headers, rows: rows };
+    [['c-date', 'date'], ['c-product', 'product'], ['c-qty', 'qty'], ['c-value', 'value']].forEach(function (p) {
+      var s = $(p[0]); s.textContent = '';
+      if (p[1] === 'qty') s.add(new Option('(sem coluna: conta 1 por linha)', -1));
+      headers.forEach(function (h, i) { s.add(new Option(h, i)); });
+      s.value = g[p[1]];
+    });
+    $('c-kind').value = g.unitPrice ? 'unit' : 'total';
+    $('map').hidden = false;
+    say(rows.length + ' linhas lidas. Confira as colunas abaixo e clique em Importar.');
+  }
+
+  function cell(tag, text, cls) { var e = document.createElement(tag); e.textContent = text; if (cls) e.className = cls; return e; }
+  function table(el, heads, body) {
+    el.textContent = '';
+    var tr = document.createElement('tr');
+    heads.forEach(function (h, i) { tr.appendChild(cell('th', h, i ? 'n' : '')); });
+    var th = document.createElement('thead'); th.appendChild(tr); el.appendChild(th);
+    var tb = document.createElement('tbody');
+    body.forEach(function (r) {
+      var row = document.createElement('tr');
+      r.forEach(function (v, i) {
+        var td = cell('td', v.text != null ? v.text : v, i ? 'n' : '');
+        if (v.bar != null) { var b = document.createElement('span'); b.className = 'bar'; b.style.width = Math.max(2, v.bar * 80) + 'px'; td.appendChild(b); }
+        row.appendChild(td);
+      });
+      tb.appendChild(row);
+    });
+    el.appendChild(tb);
+  }
+
+  $('file').addEventListener('change', function (e) {
+    var f = e.target.files[0]; if (!f) return;
+    f.arrayBuffer().then(function (b) { load(C.decode(b)); }, function () { say('Não consegui ler o arquivo.', true); });
+  });
+  $('sample').addEventListener('click', function () { $('file').value = ''; load(C.SAMPLE); });
+
+  $('go').addEventListener('click', function () {
+    var m = { date: +$('c-date').value, product: +$('c-product').value, qty: +$('c-qty').value, value: +$('c-value').value };
+    result = C.aggregate(data.rows, m, $('c-kind').value === 'unit');
+    if (!result.used) { $('out').hidden = true; say('Nenhuma linha válida. Confira se escolheu as colunas certas de data, produto e valor.', true); return; }
+    $('sum').textContent = result.used + ' linhas importadas' + (result.skipped ? ', ' + result.skipped + ' ignoradas (dados incompletos)' : '') +
+      ' de ' + result.from.split('-').reverse().join('/') + ' a ' + result.to.split('-').reverse().join('/') + '. Total: ' + brl(result.total) + '.';
+    table($('t-prod'), ['Produto', 'Unidades', 'Receita', '% da receita'], result.products.map(function (p) {
+      return [p.name, num(p.units), brl(p.revenue), { text: (p.share * 100).toFixed(1).replace('.', ',') + '%', bar: p.share }];
+    }));
+    table($('t-week'), ['Semana (começa em)', 'Unidades', 'Receita'], result.weeks.map(function (w) {
+      return [w.week.split('-').reverse().join('/'), num(w.units), brl(w.revenue)];
+    }));
+    $('out').hidden = false; say('');
+  });
+
+  $('dl').addEventListener('click', function () {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' }));
+    a.download = 'gardd-vendas.json'; a.click(); URL.revokeObjectURL(a.href);
+  });
+})();
+
+</script>
+</body>
+</html>
