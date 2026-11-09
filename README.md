@@ -2,6 +2,8 @@
 
 **Plante conteúdo. Colha vendas.**
 
+Link do projeto: https://jpfernandes77.github.io/gardd-mvp/
+
 O Gardd mostra quais conteúdos vendem quais produtos e o que gravar na próxima semana.
 
 ## O problema
