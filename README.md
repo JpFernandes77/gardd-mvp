@@ -38,19 +38,19 @@ Em construção para o Hack Brasil 2026 (4 a 30 de novembro).
 
 - [x] Identidade visual e página do projeto
 - [x] Importação de vendas por CSV (protótipo em [`gardd-core.js`](gardd-core.js), com testes em `gardd-core.test.js`)
-- [ ] Importação de posts
+- [x] Importação de posts, com sugestão do produto de cada post por palavras-chave (o lojista confirma ou marca como genérico)
 - [ ] Marcação de posts por IA
 - [ ] Painel de cruzamento
-- [ ] Recomendações
+- [x] Recomendações por produto (regar, manter, podar), comparando a parte dos posts com a parte das vendas
 
 ## Como testar o importador
 
-Abra `index.html` no navegador, vá até **Teste o importador de vendas** e clique em **Usar dados de exemplo**. Para usar um arquivo seu, exporte os pedidos do ERP em CSV, escolha o arquivo e confira as colunas sugeridas. A lógica fica em `gardd-core.js`, sem dependências, e os testes rodam com `node gardd-core.test.js`.
+Abra `index.html` no navegador, vá até **Teste o importador de vendas** e clique em **Usar dados de exemplo**: carrega as vendas e os posts de exemplo, já com o produto sugerido para cada post. Clique em **Importar** para ver as recomendações. Para ver tudo de uma vez, clique em **Ver demonstração completa**: o relatório aparece pronto e pode ser impresso ou salvo em PDF. Para usar um arquivo seu, exporte os pedidos do ERP em CSV, escolha o arquivo e confira as colunas sugeridas. A lógica fica em `gardd-core.js`, sem dependências, e os testes rodam com `node gardd-core.test.js`.
 
 ## Estrutura do repositório
 
 - `index.html`: página do projeto com o importador (precisa de `gardd-core.js` na mesma pasta)
-- `gardd-core.js`: lógica de importação e agregação
+- `gardd-core.js`: lógica de importação, agregação e sugestão de produto por post
 - `gardd-core.test.js`: testes da lógica
 - `gardd-icon.svg` e `gardd-icon-512.png`: ícone da marca
 

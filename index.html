@@ -61,7 +61,12 @@ button.o{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
 button:hover{filter:brightness(.95)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:16px}
 label{display:block;font-weight:600;font-size:.9rem}
-select{width:100%;margin-top:4px;padding:9px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
+select,textarea{width:100%;margin-top:4px;padding:9px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
+textarea{resize:vertical;margin:0 0 12px}
+td select{min-width:150px;margin-top:0}
+#t-rec td:first-child,#t-rec th{white-space:nowrap}
+#p-msg{color:var(--soil);min-height:1.5em;margin:12px 0 0}
+#p-msg.err{color:#C0392B;font-weight:600}
 input[type=file]{max-width:100%}
 td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .bar{display:inline-block;height:8px;background:var(--sprout);border-radius:4px;vertical-align:middle;margin-left:8px}
@@ -69,6 +74,25 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 #msg.err{color:#C0392B;font-weight:600}
 .lead2{color:var(--soil);max-width:62ch;margin:0 0 20px}
 @media (max-width:520px){.nl{display:none}}
+#demo-row{margin-bottom:20px}
+.stats{margin:0 0 20px}
+.stats span{display:block;color:var(--soil);font-size:.9rem}
+.stats b{display:block;font-size:1.25rem}
+#r-actions{margin-top:16px}
+@media print{
+  :root{--ink:#000;--bg:#fff;--soil:#333;--line:#999;--card:#fff;color-scheme:light}
+  body{background:#fff;color:#000;font-size:11pt}
+  header,footer,main>:not(#relatorio),#relatorio button,#r-empty{display:none!important}
+  main{max-width:none;padding:0}
+  #relatorio{border-top:0;padding:0}
+  .tw{overflow:visible}
+  table{min-width:0}
+  th,td{padding:8px 10px}
+  tr{break-inside:avoid;page-break-inside:avoid}
+  thead{display:table-header-group}
+  .tag,.tag.k,.tag.o{background:none;border:1.5px solid #000;color:#000}
+  @page{margin:15mm}
+}
 </style>
 </head>
 <body>
@@ -133,6 +157,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
   <section id="importar">
     <h2>Teste o importador de vendas</h2>
     <p class="lead2">Suba o CSV de pedidos exportado do Bling ou de outro sistema, ou use os dados de exemplo. O arquivo é lido no seu navegador e não é enviado a nenhum servidor. Não inclua dados de clientes.</p>
+    <div class="row" id="demo-row"><button id="demo" type="button">Ver demonstração completa</button></div>
     <div class="box">
       <div class="row">
         <input type="file" id="file" accept=".csv,.txt" aria-label="Arquivo CSV de vendas">
@@ -159,6 +184,32 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
       <div class="tw"><table id="t-week"></table></div>
       <button id="dl" class="o" type="button">Baixar resultado (JSON)</button>
     </div>
+    <div class="box" id="posts">
+      <h2>Posts</h2>
+      <p class="lead2">Cole ou suba a lista de posts em CSV (Data;Plataforma;Link;Legenda). O Gardd sugere de qual produto cada post fala, com base nos produtos das vendas. Confira e troque se precisar.</p>
+      <textarea id="p-text" rows="5" aria-label="Posts em CSV" placeholder="Data;Plataforma;Link;Legenda"></textarea>
+      <div class="row">
+        <input type="file" id="p-file" accept=".csv,.txt" aria-label="Arquivo CSV de posts">
+        <button id="p-go" type="button">Sugerir produtos</button>
+      </div>
+      <p id="p-msg" role="status"></p>
+      <div class="tw" id="p-out" hidden><table id="t-posts"></table></div>
+    </div>
+  </section>
+
+  <section id="relatorio">
+    <h2>Relatório</h2>
+    <p id="r-empty" class="lead2" role="status"></p>
+    <div id="r-body" hidden>
+      <div class="grid stats">
+        <div><span>Período</span><b id="r-period"></b></div>
+        <div><span>Receita total</span><b id="r-total"></b></div>
+        <div><span>Posts</span><b id="r-posts"></b></div>
+      </div>
+      <div class="tw"><table id="t-rec"></table></div>
+      <p class="note">Mostra associação entre conteúdo e venda, não causa.</p>
+      <div class="row" id="r-actions"><button id="print" type="button">Imprimir / salvar PDF</button></div>
+    </div>
   </section>
 
   <section>
@@ -174,13 +225,17 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 (function () {
   var C = window.GarddCore, $ = function (id) { return document.getElementById(id); };
   if (!C) { $('msg').textContent = 'Não encontrei o arquivo gardd-core.js. Coloque-o na mesma pasta do index.html.'; $('msg').className = 'err'; return; }
-  var data = null, result = null;
+  var data = null, result = null, posts = [], names = [];
+  var recs = [];
+  var ACAO = { regar: 'tag', manter: 'tag k', podar: 'tag o' };
+  var share = function (x) { return (x * 100).toFixed(1).replace('.', ',') + '%'; };
+  var CONF = { alta: ['Alta', 'tag k'], media: ['Média', 'tag'], nenhuma: ['Nenhuma', 'tag o'] };
   var brl = function (n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); };
   var num = function (n) { return n.toLocaleString('pt-BR'); };
   function say(t, err) { $('msg').textContent = t; $('msg').className = err ? 'err' : ''; }
 
   function load(text) {
-    $('out').hidden = true;
+    $('out').hidden = true; result = null;
     var rows = C.parseCSV(text, C.detectDelimiter(text));
     if (rows.length < 2 || rows[0].length < 2) { $('map').hidden = true; say('Não consegui separar as colunas. Confira se o arquivo é um CSV com cabeçalho.', true); return; }
     var headers = rows.shift(), g = C.guessColumns(headers);
@@ -193,6 +248,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
     });
     $('c-kind').value = g.unitPrice ? 'unit' : 'total';
     $('map').hidden = false;
+    refreshProducts();
     say(rows.length + ' linhas lidas. Confira as colunas abaixo e clique em Importar.');
   }
 
@@ -215,16 +271,118 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
     el.appendChild(tb);
   }
 
+  function refreshProducts() {
+    names = data ? C.productNames(data.rows, +$('c-product').value) : [];
+    var s = C.suggestPosts(posts, names);
+    posts = posts.map(function (p, i) {
+      var keep = p.manual && (p.choice === 'g' || names.indexOf(p.choice) >= 0);
+      return Object.assign(s[i], { choice: keep ? p.choice : s[i].product || '', manual: keep });
+    });
+    renderPosts();
+  }
+
+  function sayPosts(t, err) { $('p-msg').textContent = t; $('p-msg').className = err ? 'err' : ''; }
+
+  function loadPosts(text) {
+    var r = C.parsePosts(text);
+    posts = r.posts.map(function (p) { return Object.assign(p, { manual: false }); });
+    if (!posts.length) { renderPosts(); sayPosts('Não encontrei posts. Use o formato Data;Plataforma;Link;Legenda, com datas dd/mm/aaaa.', true); return; }
+    refreshProducts();
+    var n = { alta: 0, media: 0, nenhuma: 0 };
+    posts.forEach(function (p) { n[p.confidence]++; });
+    sayPosts(posts.length + (posts.length > 1 ? ' posts lidos' : ' post lido') + (r.skipped ? ', ' + r.skipped + ' ignorados (sem data válida)' : '') + '. ' +
+      (names.length ? 'Sugestões: ' + n.alta + ' com confiança alta, ' + n.media + ' média, ' + n.nenhuma + ' sem sugestão.'
+        : 'Importe as vendas acima para o Gardd sugerir o produto de cada post.'));
+  }
+
+  function renderPosts() {
+    var el = $('t-posts'); el.textContent = '';
+    $('p-out').hidden = !posts.length;
+    if (!posts.length) { renderReport(); return; }
+    var tr = document.createElement('tr');
+    ['Data', 'Plataforma', 'Legenda', 'Produto', 'Confiança'].forEach(function (h) { tr.appendChild(cell('th', h)); });
+    var th = document.createElement('thead'); th.appendChild(tr); el.appendChild(th);
+    var tb = document.createElement('tbody');
+    posts.forEach(function (p, i) {
+      var row = document.createElement('tr');
+      row.appendChild(cell('td', p.date.split('-').reverse().join('/')));
+      row.appendChild(cell('td', p.platform));
+      var cap = p.caption || p.link, short = cap.length > 90 ? cap.slice(0, 89) + '…' : cap, td = document.createElement('td');
+      if (/^https?:\/\//i.test(p.link)) {
+        var a = cell('a', short); a.href = p.link; a.target = '_blank'; a.rel = 'noopener noreferrer'; td.appendChild(a);
+      } else td.textContent = short;
+      if (short !== cap) td.title = cap;
+      row.appendChild(td);
+      var sel = document.createElement('select');
+      sel.setAttribute('aria-label', 'Produto do post ' + (i + 1));
+      sel.add(new Option('Sem produto definido', ''));
+      sel.add(new Option('Genérico', 'g'));
+      names.forEach(function (n) { sel.add(new Option(n, n)); });
+      sel.value = p.choice;
+      sel.addEventListener('change', function () { p.choice = sel.value; p.manual = true; renderPosts(); });
+      td = document.createElement('td'); td.appendChild(sel); row.appendChild(td);
+      var c = p.manual ? ['Confirmado', 'tag k'] : CONF[p.confidence];
+      td = document.createElement('td'); td.appendChild(cell('span', c[0], c[1])); row.appendChild(td);
+      tb.appendChild(row);
+    });
+    el.appendChild(tb);
+    renderReport();
+  }
+
+  var date = function (d) { return d.split('-').reverse().join('/'); };
+  var EMPTY = {
+    'vendas,posts': 'Para gerar o relatório, importe as vendas e os posts acima ou clique em Ver demonstração completa.',
+    vendas: 'Falta importar as vendas: escolha o CSV de vendas acima, confira as colunas e clique em Importar.',
+    posts: 'Falta importar os posts: cole ou suba o CSV de posts acima e clique em Sugerir produtos.'
+  };
+
+  function renderReport() {
+    var el = $('t-rec'); el.textContent = '';
+    var rep = C.relatorio(result, posts.map(function (p) { return { product: p.choice && p.choice !== 'g' ? p.choice : null, generic: p.choice === 'g' }; }));
+    recs = rep.recomendacoes;
+    $('r-empty').textContent = rep.faltando.length ? EMPTY[rep.faltando.join(',')] : '';
+    $('r-empty').hidden = !rep.faltando.length;
+    $('r-body').hidden = !!rep.faltando.length;
+    if (rep.faltando.length) return;
+    $('r-period').textContent = date(rep.from) + ' a ' + date(rep.to);
+    $('r-total').textContent = brl(rep.total);
+    $('r-posts').textContent = num(rep.posts) + (rep.postsComProduto !== rep.posts ? ' (' + num(rep.postsComProduto) + ' com produto)' : '');
+    var tr = document.createElement('tr');
+    ['Produto', 'Posts', '% posts', 'Vendas', '% vendas', 'O que fazer'].forEach(function (h, i) { tr.appendChild(cell('th', h, i && i < 5 ? 'n' : '')); });
+    var th = document.createElement('thead'); th.appendChild(tr); el.appendChild(th);
+    var tb = document.createElement('tbody');
+    recs.forEach(function (r) {
+      var row = document.createElement('tr');
+      [r.name, num(r.posts), share(r.postShare), brl(r.revenue), share(r.salesShare)].forEach(function (v, i) { row.appendChild(cell('td', v, i ? 'n' : '')); });
+      var td = document.createElement('td');
+      if (ACAO[r.action]) { td.appendChild(cell('span', r.label, ACAO[r.action])); td.appendChild(document.createTextNode(' ' + r.detail)); }
+      else td.textContent = r.text;
+      row.appendChild(td);
+      tb.appendChild(row);
+    });
+    el.appendChild(tb);
+  }
+
+  $('c-product').addEventListener('change', refreshProducts);
+  $('p-go').addEventListener('click', function () { loadPosts($('p-text').value); });
+  $('p-file').addEventListener('change', function (e) {
+    var f = e.target.files[0]; if (!f) return;
+    f.arrayBuffer().then(function (b) { var t = C.decode(b); $('p-text').value = t; loadPosts(t); }, function () { sayPosts('Não consegui ler o arquivo.', true); });
+  });
+
   $('file').addEventListener('change', function (e) {
     var f = e.target.files[0]; if (!f) return;
     f.arrayBuffer().then(function (b) { load(C.decode(b)); }, function () { say('Não consegui ler o arquivo.', true); });
   });
-  $('sample').addEventListener('click', function () { $('file').value = ''; load(C.SAMPLE); });
+  $('sample').addEventListener('click', function () {
+    $('file').value = ''; load(C.SAMPLE);
+    $('p-file').value = ''; $('p-text').value = C.SAMPLE_POSTS; loadPosts(C.SAMPLE_POSTS);
+  });
 
-  $('go').addEventListener('click', function () {
+  function importSales() {
     var m = { date: +$('c-date').value, product: +$('c-product').value, qty: +$('c-qty').value, value: +$('c-value').value };
     result = C.aggregate(data.rows, m, $('c-kind').value === 'unit');
-    if (!result.used) { $('out').hidden = true; say('Nenhuma linha válida. Confira se escolheu as colunas certas de data, produto e valor.', true); return; }
+    if (!result.used) { $('out').hidden = true; say('Nenhuma linha válida. Confira se escolheu as colunas certas de data, produto e valor.', true); renderReport(); return; }
     $('sum').textContent = result.used + ' linhas importadas' + (result.skipped ? ', ' + result.skipped + ' ignoradas (dados incompletos)' : '') +
       ' de ' + result.from.split('-').reverse().join('/') + ' a ' + result.to.split('-').reverse().join('/') + '. Total: ' + brl(result.total) + '.';
     table($('t-prod'), ['Produto', 'Unidades', 'Receita', '% da receita'], result.products.map(function (p) {
@@ -234,11 +392,27 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
       return [w.week.split('-').reverse().join('/'), num(w.units), brl(w.revenue)];
     }));
     $('out').hidden = false; say('');
+    renderReport();
+  }
+
+  $('go').addEventListener('click', importSales);
+  $('demo').addEventListener('click', function () {
+    $('file').value = ''; load(C.SAMPLE);
+    $('p-file').value = ''; $('p-text').value = C.SAMPLE_POSTS; loadPosts(C.SAMPLE_POSTS);
+    importSales();
+    $('relatorio').scrollIntoView();
   });
+  $('print').addEventListener('click', function () { window.print(); });
+  renderReport();
 
   $('dl').addEventListener('click', function () {
     var a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' }));
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(posts.length ? Object.assign({}, result, { posts: posts.map(function (p) {
+      return { date: p.date, platform: p.platform, link: p.link, caption: p.caption, product: p.choice && p.choice !== 'g' ? p.choice : null,
+        generic: p.choice === 'g', suggested: p.product, confidence: p.confidence, confirmed: p.manual };
+    }), recomendacoes: recs.map(function (r) {
+      return { product: r.name, posts: r.posts, postShare: r.postShare, revenue: r.revenue, salesShare: r.salesShare, diff: r.diff, action: r.action, text: r.text };
+    }) }) : result, null, 2)], { type: 'application/json' }));
     a.download = 'gardd-vendas.json'; a.click(); URL.revokeObjectURL(a.href);
   });
 })();
