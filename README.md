@@ -1,5 +1,7 @@
 # Gardd
 
+[![Testes](https://github.com/JpFernandes77/gardd-mvp/actions/workflows/test.yml/badge.svg)](https://github.com/JpFernandes77/gardd-mvp/actions/workflows/test.yml)
+
 **Plante conteúdo. Colha vendas.**
 
 Link do projeto: https://jpfernandes77.github.io/gardd-mvp/
@@ -40,7 +42,7 @@ Em construção para o Hack Brasil 2026 (4 a 30 de novembro).
 - [x] Importação de vendas por CSV (protótipo em [`gardd-core.js`](gardd-core.js), com testes em `gardd-core.test.js`)
 - [x] Importação de posts, com sugestão do produto de cada post por palavras-chave (o lojista confirma ou marca como genérico)
 - [ ] Marcação de posts por IA
-- [ ] Painel de cruzamento
+- [x] Painel de cruzamento
 - [x] Recomendações por produto (regar, manter, podar), comparando a parte dos posts com a parte das vendas
 
 ## Como testar o importador
