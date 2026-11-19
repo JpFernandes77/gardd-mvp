@@ -85,10 +85,11 @@
       if (!name || !dt || isNaN(qty) || isNaN(val)) { skipped++; return; }
       var total = unitPrice ? val * qty : val;
       used++;
-      var p = byP[name] || (byP[name] = { name: name, units: 0, revenue: 0 });
+      var p = byP[name] || (byP[name] = { name: name, units: 0, revenue: 0, byWeek: {} });
       p.units += qty; p.revenue += total;
       var w = weekStart(dt), k = byW[w] || (byW[w] = { week: w, units: 0, revenue: 0 });
       k.units += qty; k.revenue += total;
+      p.byWeek[w] = (p.byWeek[w] || 0) + total;
       if (!from || dt < from) from = dt;
       if (!to || dt > to) to = dt;
     });
@@ -317,12 +318,34 @@
     return r;
   }
 
+  // ---- Série semanal ----
+  // vendas: resultado de aggregate(). posts: [{ date: 'aaaa-mm-dd', product, generic }].
+  // Devolve [{ week, posts, revenue }] do produto, semana a semana (começando na segunda),
+  // cobrindo todo o período das vendas e dos posts, inclusive semanas sem nada.
+  function serieSemanal(vendas, posts, produto) {
+    var weeks = {}, count = {}, min = null, max = null;
+    function add(w) { weeks[w] = 1; if (!min || w < min) min = w; if (!max || w > max) max = w; }
+    ((vendas && vendas.weeks) || []).forEach(function (w) { add(w.week); });
+    (posts || []).forEach(function (p) {
+      var dt = p && parseDate(p.date);
+      if (!dt) return;
+      var w = weekStart(dt); add(w);
+      if (p.product === produto && !p.generic) count[w] = (count[w] || 0) + 1;
+    });
+    if (!min) return [];
+    var prod = ((vendas && vendas.products) || []).filter(function (p) { return p.name === produto; })[0];
+    var byWeek = (prod && prod.byWeek) || {}, out = [], d = parseDate(min);
+    for (var w = min; w <= max; d.setUTCDate(d.getUTCDate() + 7), w = d.toISOString().slice(0, 10))
+      out.push({ week: w, posts: count[w] || 0, revenue: byWeek[w] || 0 });
+    return out;
+  }
+
   var api = {
     decode: decode, detectDelimiter: detectDelimiter, parseCSV: parseCSV, parseNumber: parseNumber,
     parseDate: parseDate, weekStart: weekStart, guessColumns: guessColumns, aggregate: aggregate, SAMPLE: SAMPLE,
     guessPostColumns: guessPostColumns, parsePosts: parsePosts, productNames: productNames,
     suggestProduct: suggestProduct, suggestPosts: suggestPosts, SAMPLE_POSTS: SAMPLE_POSTS,
-    recomendar: recomendar, relatorio: relatorio
+    recomendar: recomendar, relatorio: relatorio, serieSemanal: serieSemanal
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.GarddCore = api;

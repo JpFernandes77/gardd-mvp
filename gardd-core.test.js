@@ -93,5 +93,21 @@ t('relatório sem posts', C.relatorio(a, []).faltando, ['posts']);
 t('relatório vazio', [C.relatorio(null, null).faltando, C.relatorio(null, null).recomendacoes], [['vendas', 'posts'], []]);
 t('relatório com vendas inválidas', C.relatorio(C.aggregate([], m, false), sug).faltando, ['vendas']);
 
+// Série semanal
+const ps = sug.map(p => ({ date: p.date, product: p.product }));
+t('semanal: Produto C', C.serieSemanal(a, ps, 'Produto C'),
+  [{ week: '2026-11-02', posts: 0, revenue: 747 }, { week: '2026-11-09', posts: 1, revenue: 1245 }, { week: '2026-11-16', posts: 0, revenue: 498 }]);
+t('semanal: Produto E', C.serieSemanal(a, ps, 'Produto E').map(w => [w.posts, w.revenue]), [[3, 39.9], [2, 39.9], [1, 0]]);
+t('semanal: soma posts e receita', ['Produto A', 'Produto B', 'Produto C', 'Produto D', 'Produto E'].map(n => {
+  const s = C.serieSemanal(a, ps, n); return [s.reduce((x, w) => x + w.posts, 0), Math.round(s.reduce((x, w) => x + w.revenue, 0) * 100) / 100];
+}), [[3, 359.6], [4, 389.7], [1, 2490], [3, 318], [6, 79.8]]);
+t('semanal: domingo conta na semana anterior', C.serieSemanal(null, [{ date: '2026-11-08', product: 'X' }], 'X'), [{ week: '2026-11-02', posts: 1, revenue: 0 }]);
+t('semanal: preenche semanas vazias', C.serieSemanal(null, [{ date: '2026-11-02', product: 'X' }, { date: '2026-11-25', product: 'Y' }], 'X').map(w => [w.week, w.posts]),
+  [['2026-11-02', 1], ['2026-11-09', 0], ['2026-11-16', 0], ['2026-11-23', 0]]);
+t('semanal: ignora genéricos e sem produto', C.serieSemanal(null, [{ date: '2026-11-02', product: 'X', generic: true }, { date: '2026-11-03', product: null }, { date: 'xx', product: 'X' }], 'X'),
+  [{ week: '2026-11-02', posts: 0, revenue: 0 }]);
+t('semanal: produto sem vendas', C.serieSemanal(a, ps, 'Produto Z').map(w => w.revenue), [0, 0, 0]);
+t('semanal: sem dados', C.serieSemanal(null, [], 'X'), []);
+
 console.log(ok + ' ok, ' + bad + ' falhas');
 process.exit(bad ? 1 : 0);

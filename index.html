@@ -79,6 +79,14 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .stats span{display:block;color:var(--soil);font-size:.9rem}
 .stats b{display:block;font-size:1.25rem}
 #r-actions{margin-top:16px}
+#r-chart{margin-top:28px}
+#r-chart label{max-width:280px}
+svg.chart{display:block;width:100%;height:auto;margin-top:16px;color:var(--ink)}
+svg.chart text{font:600 13px Figtree,system-ui,sans-serif;fill:currentColor}
+svg.chart text.s{font-weight:400;fill:var(--soil)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 20px;margin:8px 0 0;color:var(--soil);font-size:.9rem}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:3px;background:#2FB56B;vertical-align:-2px;margin-right:6px}
+.legend i.l{width:20px;height:4px;border-radius:2px;background:#F5C518;box-shadow:0 0 0 1px var(--ink);vertical-align:3px}
 @media print{
   :root{--ink:#000;--bg:#fff;--soil:#333;--line:#999;--card:#fff;color-scheme:light}
   body{background:#fff;color:#000;font-size:11pt}
@@ -91,6 +99,8 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
   tr{break-inside:avoid;page-break-inside:avoid}
   thead{display:table-header-group}
   .tag,.tag.k,.tag.o{background:none;border:1.5px solid #000;color:#000}
+  #r-chart label{display:none}
+  #r-chart{break-inside:avoid;page-break-inside:avoid}
   @page{margin:15mm}
 }
 </style>
@@ -207,6 +217,12 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
         <div><span>Posts</span><b id="r-posts"></b></div>
       </div>
       <div class="tw"><table id="t-rec"></table></div>
+      <div id="r-chart">
+        <label>Produto do gráfico<select id="r-product"></select></label>
+        <p class="note" id="r-chart-cap"></p>
+        <div id="r-svg"></div>
+        <p class="legend"><span><i></i>Posts na semana</span><span><i class="l"></i>Receita na semana</span></p>
+      </div>
       <p class="note">Mostra associação entre conteúdo e venda, não causa.</p>
       <div class="row" id="r-actions"><button id="print" type="button">Imprimir / salvar PDF</button></div>
     </div>
@@ -226,7 +242,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
   var C = window.GarddCore, $ = function (id) { return document.getElementById(id); };
   if (!C) { $('msg').textContent = 'Não encontrei o arquivo gardd-core.js. Coloque-o na mesma pasta do index.html.'; $('msg').className = 'err'; return; }
   var data = null, result = null, posts = [], names = [];
-  var recs = [];
+  var recs = [], reportPosts = [];
   var ACAO = { regar: 'tag', manter: 'tag k', podar: 'tag o' };
   var share = function (x) { return (x * 100).toFixed(1).replace('.', ',') + '%'; };
   var CONF = { alta: ['Alta', 'tag k'], media: ['Média', 'tag'], nenhuma: ['Nenhuma', 'tag o'] };
@@ -338,7 +354,8 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 
   function renderReport() {
     var el = $('t-rec'); el.textContent = '';
-    var rep = C.relatorio(result, posts.map(function (p) { return { product: p.choice && p.choice !== 'g' ? p.choice : null, generic: p.choice === 'g' }; }));
+    reportPosts = posts.map(function (p) { return { date: p.date, product: p.choice && p.choice !== 'g' ? p.choice : null, generic: p.choice === 'g' }; });
+    var rep = C.relatorio(result, reportPosts);
     recs = rep.recomendacoes;
     $('r-empty').textContent = rep.faltando.length ? EMPTY[rep.faltando.join(',')] : '';
     $('r-empty').hidden = !rep.faltando.length;
@@ -361,7 +378,64 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
       tb.appendChild(row);
     });
     el.appendChild(tb);
+    var sel = $('r-product'), keep = sel.value;
+    sel.textContent = '';
+    recs.forEach(function (r) { sel.add(new Option(r.name, r.name)); });
+    if (recs.some(function (r) { return r.name === keep; })) sel.value = keep;
+    drawChart();
   }
+
+  var SVG = 'http://www.w3.org/2000/svg';
+  function svgEl(tag, attrs, text) {
+    var e = document.createElementNS(SVG, tag);
+    Object.keys(attrs).forEach(function (k) { e.setAttribute(k, attrs[k]); });
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  function drawChart() {
+    var box = $('r-svg'), name = $('r-product').value;
+    box.textContent = '';
+    var serie = name ? C.serieSemanal(result, reportPosts, name) : [];
+    $('r-chart').hidden = !serie.length;
+    if (!serie.length) return;
+    var n = serie.length, W = Math.max(280, Math.round(box.clientWidth || 640)), H = 270;
+    var top = 16, bottom = H - 66, left = 8, slot = (W - 2 * left) / n, plot = bottom - top;
+    var maxP = Math.max(1, Math.max.apply(null, serie.map(function (w) { return w.posts; })));
+    var maxR = Math.max.apply(null, serie.map(function (w) { return w.revenue; })) || 1;
+    var bw = Math.min(48, slot * 0.55), stepX = Math.ceil(92 / slot);
+    var svg = svgEl('svg', { 'class': 'chart', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H, role: 'img' });
+    var desc = name + ', por semana: ' + serie.map(function (w) {
+      return 'semana de ' + date(w.week) + ', ' + w.posts + (w.posts === 1 ? ' post' : ' posts') + ' e ' + brl(w.revenue);
+    }).join('; ') + '.';
+    svg.setAttribute('aria-label', desc);
+    svg.appendChild(svgEl('line', { x1: left, x2: W - left, y1: bottom, y2: bottom, style: 'stroke:var(--line)', 'stroke-width': 2 }));
+    var pts = serie.map(function (w, i) {
+      var cx = left + slot * (i + 0.5), h = w.posts / maxP * plot * 0.8;
+      if (w.posts) svg.appendChild(svgEl('rect', { x: cx - bw / 2, y: bottom - h, width: bw, height: h, rx: 4, fill: '#2FB56B' }));
+      if (i % stepX === 0 || n <= 1) {
+        svg.appendChild(svgEl('text', { x: cx, y: H - 44, 'text-anchor': 'middle' }, date(w.week).slice(0, 5)));
+        svg.appendChild(svgEl('text', { x: cx, y: H - 26, 'text-anchor': 'middle', 'class': 's' }, w.posts + (w.posts === 1 ? ' post' : ' posts')));
+        svg.appendChild(svgEl('text', { x: cx, y: H - 8, 'text-anchor': 'middle', 'class': 's' }, brl(w.revenue)));
+      }
+      return [cx, bottom - w.revenue / maxR * plot];
+    });
+    var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
+    svg.appendChild(svgEl('path', { d: d, fill: 'none', style: 'stroke:var(--ink)', 'stroke-width': 6, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+    svg.appendChild(svgEl('path', { d: d, fill: 'none', stroke: '#F5C518', 'stroke-width': 3, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+    pts.forEach(function (p) {
+      svg.appendChild(svgEl('circle', { cx: p[0], cy: p[1], r: 5, fill: '#F5C518', style: 'stroke:var(--ink)', 'stroke-width': 1.5 }));
+    });
+    box.appendChild(svg);
+    $('r-chart-cap').textContent = name + ': posts e receita por semana (a semana começa na segunda).';
+  }
+
+  $('r-product').addEventListener('change', drawChart);
+  var resizeT;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeT);
+    resizeT = setTimeout(function () { if (!$('r-body').hidden) drawChart(); }, 150);
+  });
 
   $('c-product').addEventListener('change', refreshProducts);
   $('p-go').addEventListener('click', function () { loadPosts($('p-text').value); });

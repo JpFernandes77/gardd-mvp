@@ -44,6 +44,7 @@ Em construção para o Hack Brasil 2026 (4 a 30 de novembro).
 - [ ] Marcação de posts por IA
 - [x] Painel de cruzamento
 - [x] Recomendações por produto (regar, manter, podar), comparando a parte dos posts com a parte das vendas
+- [x] Gráfico semanal por produto no relatório (barras: posts; linha: receita)
 
 ## Como testar o importador
 
