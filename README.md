@@ -30,7 +30,7 @@ As sugestões mostram associação entre conteúdo e venda, não prova de causa.
 
 1. Importa vendas por produto (CSV exportado do Bling ou de outro ERP). Reconhece as colunas automaticamente, aceita separador `;` ou `,`, vírgula decimal, datas `dd/mm/aaaa` e acentuação do Windows. Tudo roda no navegador, sem enviar o arquivo a um servidor. Sem dados de clientes.
 2. Importa a lista de posts (data, plataforma, link e legenda).
-3. Uma IA sugere de qual produto cada post fala, e o lojista confirma.
+3. O Gardd sugere, por palavras-chave no texto do post, de qual produto cada post fala, e o lojista confirma.
 4. O painel cruza posts e vendas por produto e por semana.
 5. O Gardd gera as recomendações (regar, manter, podar).
 
